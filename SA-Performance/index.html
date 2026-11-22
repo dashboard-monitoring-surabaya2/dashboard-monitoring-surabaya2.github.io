@@ -342,6 +342,22 @@ tbody tr:hover{background:#202b36!important}
 #performancePane .perf-filters select{background:#050b19;color:#e8edf6;border:1px solid #26344b;border-radius:14px;padding:12px}
 @media(max-width:1250px){#performancePane .perf-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){#performancePane .perf-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#performancePane .perf-kpi{padding:14px;min-height:190px}#performancePane .perf-kpi .num{font-size:23px}#performancePane .perf-filters{grid-template-columns:1fr}}
+
+/* Preview laporan WhatsApp Performa SA */
+.wa-preview-modal{display:none;position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.78);padding:18px;align-items:center;justify-content:center}
+.wa-preview-modal.open{display:flex}
+.wa-preview-box{width:min(760px,100%);max-height:92vh;display:flex;flex-direction:column;background:#151b23;border:1px solid #465362;border-radius:16px;box-shadow:0 24px 80px #000b;overflow:hidden;color:#f4f6f8}
+.wa-preview-head{padding:17px 20px;border-bottom:1px solid #35404d;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wa-preview-head h3{margin:0;font-size:16px;color:#fff}
+.wa-preview-head p{margin:4px 0 0;color:#aeb8c4;font-size:11px}
+.wa-preview-content{padding:16px 20px;overflow:auto}
+.wa-preview-content pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.65 Inter,Arial,sans-serif;color:#e9edf2;background:#0b1016;border:1px solid #35404d;border-radius:11px;padding:16px}
+.wa-preview-foot{padding:14px 20px;border-top:1px solid #35404d;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.wa-preview-foot small{color:#aeb8c4;font-size:11px}
+.wa-preview-actions{display:flex;gap:8px;flex-wrap:wrap}
+#waPreviewCopy{background:linear-gradient(135deg,#168c50,#0c6538)!important;border:1px solid #28bd70!important}
+@media(max-width:560px){.wa-preview-modal{padding:8px}.wa-preview-head,.wa-preview-content,.wa-preview-foot{padding:13px}.wa-preview-content pre{font-size:12px}}
+
 </style>
 </head>
 <body>
@@ -687,7 +703,8 @@ function exportPerformanceWA(){
  const base=perfRows.filter(r=>(!asm||r.asm===asm)&&(!ae||r.ae===ae)&&(!plan||r.plan===plan));
  const current=base.filter(r=>inPeriod(r,startNow,endNow));
  const groups={};
- base.forEach(r=>{if(!r.ae)return;const key=(r.asm||'ASM belum tersedia')+'||'+r.ae;groups[key]??={asm:r.asm||'—',ae:r.ae,count:0};});
+ // Laporan WA hanya memuat AE yang benar-benar memiliki SA pada bulan berjalan.
+ // AE tanpa transaksi SA pada bulan ini tidak dimasukkan ke daftar maupun target total.
  current.forEach(r=>{if(!r.ae)return;const key=(r.asm||'ASM belum tersedia')+'||'+r.ae;groups[key]??={asm:r.asm||'—',ae:r.ae,count:0};groups[key].count++;});
  const list=Object.values(groups).sort((a,b)=>b.count-a.count||a.ae.localeCompare(b.ae,'id'));
  const target=list.length*15,total=current.length,gap=Math.max(0,target-total);
@@ -713,10 +730,39 @@ function exportPerformanceWA(){
  else lines.push('_Belum ada AE yang teridentifikasi pada data._');
  lines.push('','📌 _Penilaian berdasarkan jumlah SA. Revenue tidak menjadi indikator target._','⏱️ Dibuat: '+new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}));
  const message=lines.join('\n');
- if(navigator.clipboard&&navigator.clipboard.writeText){
-  navigator.clipboard.writeText(message).then(()=>alert('Laporan target SA berhasil disalin. Silakan tempel di grup WhatsApp.'),()=>window.prompt('Salin laporan berikut:',message));
- }else window.prompt('Salin laporan berikut:',message);
+ openWhatsAppPreview(message);
 }
+function openWhatsAppPreview(message){
+ $('waPreviewText').textContent=message;
+ $('waPreviewStatus').textContent='Belum disalin. Periksa laporan terlebih dahulu.';
+ $('waPreviewModal').classList.add('open');
+}
+function closeWhatsAppPreview(){
+ $('waPreviewModal').classList.remove('open');
+}
+async function copyWhatsAppPreview(){
+ const message=$('waPreviewText').textContent;
+ try{
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   await navigator.clipboard.writeText(message);
+  }else{
+   const area=document.createElement('textarea');
+   area.value=message;area.style.position='fixed';area.style.opacity='0';
+   document.body.appendChild(area);area.select();
+   const ok=document.execCommand('copy');area.remove();
+   if(!ok)throw new Error('Clipboard tidak tersedia');
+  }
+  $('waPreviewStatus').textContent='Laporan berhasil disalin. Buka grup WhatsApp lalu tempel dan kirim.';
+  $('waPreviewCopy').textContent='Tersalin ✓';
+ }catch(err){
+  $('waPreviewStatus').textContent='Gagal menyalin otomatis. Silakan pilih dan salin teks pada preview.';
+ }
+}
+$('waPreviewClose').addEventListener('click',closeWhatsAppPreview);
+$('waPreviewCloseTop').addEventListener('click',closeWhatsAppPreview);
+$('waPreviewCopy').addEventListener('click',copyWhatsAppPreview);
+$('waPreviewModal').addEventListener('click',e=>{if(e.target===$('waPreviewModal'))closeWhatsAppPreview();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeWhatsAppPreview();});
 function renderPerformance(){
  const now=new Date(),y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
  const dateInput=$('perfCompareDate');
@@ -1026,5 +1072,23 @@ window.showDashboardPane('performance');
  setInterval(loadSidoarjoWeather,600000);
 })();
 </script>
+
+
+<div class="wa-preview-modal" id="waPreviewModal" role="dialog" aria-modal="true" aria-labelledby="waPreviewTitle">
+ <div class="wa-preview-box">
+  <div class="wa-preview-head">
+   <div><h3 id="waPreviewTitle">Preview Laporan WhatsApp</h3><p>Periksa isi laporan sebelum menyalinnya ke grup WA.</p></div>
+   <button type="button" class="secondary" id="waPreviewCloseTop" aria-label="Tutup preview">✕</button>
+  </div>
+  <div class="wa-preview-content"><pre id="waPreviewText"></pre></div>
+  <div class="wa-preview-foot">
+   <small id="waPreviewStatus">Belum dikirim. Salin setelah laporan diperiksa.</small>
+   <div class="wa-preview-actions">
+    <button type="button" class="secondary" id="waPreviewClose">Tutup</button>
+    <button type="button" id="waPreviewCopy">Salin untuk WhatsApp</button>
+   </div>
+  </div>
+ </div>
+</div>
 
 </body></html>
