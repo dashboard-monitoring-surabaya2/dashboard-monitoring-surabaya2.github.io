@@ -358,6 +358,10 @@ tbody tr:hover{background:#202b36!important}
 #waPreviewCopy{background:linear-gradient(135deg,#168c50,#0c6538)!important;border:1px solid #28bd70!important}
 @media(max-width:560px){.wa-preview-modal{padding:8px}.wa-preview-head,.wa-preview-content,.wa-preview-foot{padding:13px}.wa-preview-content pre{font-size:12px}}
 
+
+.portal-back-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#8b1e2b,#5f121c);color:#ffdc8a!important;padding:11px 16px;border:1px solid #c44b54;border-radius:9px;text-decoration:none;font-size:12px;font-weight:850;letter-spacing:.2px;margin:0 0 12px;box-shadow:0 5px 14px #0005;transition:transform .18s,filter .18s}
+.portal-back-btn:hover{transform:translateY(-1px);filter:brightness(1.12)}
+
 </style>
 </head>
 <body>
@@ -368,7 +372,9 @@ tbody tr:hover{background:#202b36!important}
 <button class="navtab" id="tabUnpaid" type="button" role="tab" aria-selected="false" onclick="window.showDashboardPane('unpaid')">SA Unpaid</button>
 
 </div>
-<div id="unpaidPane" class="pane-hidden" style="display:none"><div class="page-title"><span class="title-mark">▮</span><div><h2>Monitoring SA <b>Surabaya 2</b></h2><small>Customer Aging Control · Live operational dashboard</small></div><div class="page-date" id="liveDateTime">Memuat tanggal dan jam WIB…</div></div>
+<div id="unpaidPane" class="pane-hidden" style="display:none">
+<a href="https://dashboard-monitoring-surabaya2.github.io/" class="portal-back-btn">← KEMBALI KE PORTAL UTAMA</a>
+<div class="page-title"><span class="title-mark">▮</span><div><h2>Monitoring SA <b>Surabaya 2</b></h2><small>Customer Aging Control · Live operational dashboard</small></div><div class="page-date" id="liveDateTime">Memuat tanggal dan jam WIB…</div></div>
 <div class="weather-live" id="sidoarjoWeather" aria-live="polite">
   <div class="weather-place"><span class="weather-pin">●</span><div><b>CUACA <select id="weatherCity" aria-label="Pilih kota cuaca"><option value="sidoarjo">SIDOARJO</option><option value="surabaya">SURABAYA</option></select></b><small id="weatherUpdated">Mengambil data cuaca live…</small></div></div>
   <div class="weather-main"><span class="weather-icon" id="weatherIcon">⛅</span><div><strong id="weatherTemp">--°C</strong><small id="weatherDesc">Memuat kondisi cuaca</small></div></div>
@@ -602,9 +608,7 @@ function exportUnpaidWA(){
  if(sorted.length)sorted.forEach((r,i)=>{const statusLabel=String(r.service||'').trim()||'STATUS KOSONG';lines.push((i+1)+'. '+(isNonActive(r)?'🔴':'🟢')+' *'+statusLabel.toUpperCase()+'* | *'+(r.cust||'Nama tidak tersedia')+'* | AE: '+(r.ae||'—')+' | ASM: '+(r.asm||'—')+' | Tunggakan: *'+f(r.days)+' hari* | ID: '+(r.sub||'—'));});
  lines.push('','📌 _Sumber: Dashboard Monitoring SA Surabaya 2_','⚡ _Mohon prioritaskan follow-up dan konfirmasi status pembayaran pelanggan dengan status selain ACTIVE._','⏱️ Dibuat: '+new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}));
  const message=lines.join('\n');
- if(navigator.clipboard&&navigator.clipboard.writeText){
-  navigator.clipboard.writeText(message).then(()=>alert('Laporan SA Unpaid berhasil disalin. Silakan tempel ke grup WhatsApp.'),()=>window.prompt('Salin laporan SA Unpaid berikut:',message));
- }else window.prompt('Salin laporan SA Unpaid berikut:',message);
+ openWhatsAppPreview(message);
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 $('asmFilter').addEventListener('change',()=>{updateAE();applyFilters()});$('aeFilter').addEventListener('change',applyFilters);$('search').addEventListener('input',applyFilters);$('resetBtn').onclick=()=>{$('asmFilter').value='';updateAE();$('aeFilter').value='';$('search').value='';applyFilters()};$('refreshBtn').onclick=load;$('sourceBtn').onclick=()=>$('sourceBox').classList.toggle('open');$('exportBtn').onclick=()=>{let head=['ASM','sales_agent_name','service_activation_date','subscription_id','invoice_status','service_status','Unpaid Brp Hari','Cust Name','Klasifikasi'];let data=filtered.map(r=>[r.asm,r.ae,r.activation,r.sub,r.invoice,r.service,r.days,r.cust,r.group[0]]);let csv=[head,...data].map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='Monitoring_Unpaid_SA_Surabaya2.csv';a.click();URL.revokeObjectURL(a.href)};
