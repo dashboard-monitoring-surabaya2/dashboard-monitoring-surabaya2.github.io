@@ -494,6 +494,24 @@ tbody tr:hover{background:#202b36!important}
  </div>
 </div>
 
+
+<div class="wa-preview-modal" id="waPreviewModal" role="dialog" aria-modal="true" aria-labelledby="waPreviewTitle">
+ <div class="wa-preview-box">
+  <div class="wa-preview-head">
+   <div><h3 id="waPreviewTitle">Preview Laporan WhatsApp</h3><p>Periksa isi laporan sebelum menyalinnya ke grup WA.</p></div>
+   <button type="button" class="secondary" id="waPreviewCloseTop" aria-label="Tutup preview">✕</button>
+  </div>
+  <div class="wa-preview-content"><pre id="waPreviewText"></pre></div>
+  <div class="wa-preview-foot">
+   <small id="waPreviewStatus">Belum dikirim. Salin setelah laporan diperiksa.</small>
+   <div class="wa-preview-actions">
+    <button type="button" class="secondary" id="waPreviewClose">Tutup</button>
+    <button type="button" id="waPreviewCopy">Salin untuk WhatsApp</button>
+   </div>
+  </div>
+ </div>
+</div>
+
 <script>
 const SHEET_ID='1RHBB-N5TZ4LzNRRu7RVHOKWwd1ewSyBSQ1r9ZN8Q2jQ';
 const GID='1539299389';
@@ -1078,21 +1096,5 @@ window.showDashboardPane('performance');
 </script>
 
 
-<div class="wa-preview-modal" id="waPreviewModal" role="dialog" aria-modal="true" aria-labelledby="waPreviewTitle">
- <div class="wa-preview-box">
-  <div class="wa-preview-head">
-   <div><h3 id="waPreviewTitle">Preview Laporan WhatsApp</h3><p>Periksa isi laporan sebelum menyalinnya ke grup WA.</p></div>
-   <button type="button" class="secondary" id="waPreviewCloseTop" aria-label="Tutup preview">✕</button>
-  </div>
-  <div class="wa-preview-content"><pre id="waPreviewText"></pre></div>
-  <div class="wa-preview-foot">
-   <small id="waPreviewStatus">Belum dikirim. Salin setelah laporan diperiksa.</small>
-   <div class="wa-preview-actions">
-    <button type="button" class="secondary" id="waPreviewClose">Tutup</button>
-    <button type="button" id="waPreviewCopy">Salin untuk WhatsApp</button>
-   </div>
-  </div>
- </div>
-</div>
 
 </body></html>
