@@ -683,8 +683,8 @@ function exportPerformanceWA(){
  const now=new Date(),y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
  const startNow=new Date(y,m,1),endNow=new Date(y,m,day,23,59,59);
  const inPeriod=(r,from,to)=>r.activation>=from&&r.activation<=to;
- const asm=$('perfAsm').value,ae=$('perfAe').value;
- const base=perfRows.filter(r=>(!asm||r.asm===asm)&&(!ae||r.ae===ae));
+ const asm=$('perfAsm').value,ae=$('perfAe').value,plan=$('perfPlan').value;
+ const base=perfRows.filter(r=>(!asm||r.asm===asm)&&(!ae||r.ae===ae)&&(!plan||r.plan===plan));
  const current=base.filter(r=>inPeriod(r,startNow,endNow));
  const groups={};
  base.forEach(r=>{if(!r.ae)return;const key=(r.asm||'ASM belum tersedia')+'||'+r.ae;groups[key]??={asm:r.asm||'—',ae:r.ae,count:0};});
@@ -698,6 +698,7 @@ function exportPerformanceWA(){
  '📅 Periode: 1–'+day+' '+now.toLocaleDateString('id-ID',{month:'long',year:'numeric'}),
  asm?'👤 ASM: '+asm:'👥 ASM: Semua ASM',
  ae?'🧑‍💼 AE: '+ae:'🧑‍💼 AE: Semua AE',
+ plan?'📦 Paket: '+plan:'📦 Paket: Semua Paket',
  '',
  '📊 *RINGKASAN TARGET*',
  '• Total SA bulan ini: *'+f(total)+'*',
@@ -711,7 +712,7 @@ function exportPerformanceWA(){
  if(list.length)list.forEach((r,i)=>lines.push((i+1)+'. *'+r.ae+'* — '+f(r.count)+'/15 SA ('+(r.count/15*100).toLocaleString('id-ID',{maximumFractionDigits:1})+'%) | '+(r.count>=15?'✅ Target tercapai':'Sisa '+f(15-r.count)+' SA')+(asm?'':' | '+r.asm)));
  else lines.push('_Belum ada AE yang teridentifikasi pada data._');
  lines.push('','📌 _Penilaian berdasarkan jumlah SA. Revenue tidak menjadi indikator target._','⏱️ Dibuat: '+new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}));
- const message=lines.join('\\n');
+ const message=lines.join('\n');
  if(navigator.clipboard&&navigator.clipboard.writeText){
   navigator.clipboard.writeText(message).then(()=>alert('Laporan target SA berhasil disalin. Silakan tempel di grup WhatsApp.'),()=>window.prompt('Salin laporan berikut:',message));
  }else window.prompt('Salin laporan berikut:',message);
