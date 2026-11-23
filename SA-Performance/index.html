@@ -424,17 +424,13 @@ tbody tr:hover{background:#202b36!important}
   <div class="field"><label>PAKET / PLAN</label><select id="perfPlan"><option value="">Semua Paket</option></select></div>
  </section>
  <section class="perf-kpis">
-  <div class="card perf-kpi"><div class="label">SA BULAN INI vs BULAN LALU (MTD)</div><div class="num" id="pTotal">—</div><div class="perf-sub" id="pMtdCompare">Membandingkan periode yang sama</div><div class="perf-sub" id="pMtdBasis"></div><div class="perf-date-pick"><label for="perfCompareDate">TANGGAL PEMBANDING BULAN LALU</label><input id="perfCompareDate" type="date" aria-label="Pilih tanggal pembanding bulan lalu"><small id="perfCompareHint">Pilih tanggal di bulan lalu</small></div></div>
+  <div class="card perf-kpi"><div class="label">AVG SA/HARI INI vs AVG SA/HARI BULAN LALU (EOM)</div><div class="num" id="pTotal">—</div><div class="perf-sub" id="pMtdCompare">Rata-rata SA harian bulan lalu EOM</div><div class="perf-sub" id="pMtdBasis"></div><div class="perf-date-pick"><label for="perfCompareDate">TANGGAL ACUAN VERSUS</label><input id="perfCompareDate" type="date" aria-label="Pilih tanggal acuan perbandingan"><small id="perfCompareHint">Pilih tanggal acuan bulan lalu</small></div></div>
   <div class="card perf-kpi"><div class="label">RUNRATE EOM vs BULAN LALU</div><div class="num" id="pRunrate">—</div><div class="perf-sub" id="pRunrateCompare">Proyeksi akhir bulan</div><div class="perf-sub" id="pRunrateBasis"></div><div class="perf-date-pick"><label for="perfCommitDate">TANGGAL KOMITMEN RUNRATE</label><input id="perfCommitDate" type="date" aria-label="Pilih tanggal komitmen runrate"><small id="perfCommitHint">Target SA harian untuk mengejar runrate bulan lalu</small></div></div>
   <div class="card perf-kpi"><div class="label">RATA-RATA SA / HARI</div><div class="num" id="pAverage">—</div><div class="perf-sub" id="pBestDay">Hari tertinggi: —</div></div>
   <div class="card perf-kpi"><div class="label">EST. REVENUE BEFORE TAX</div><div class="num" id="pRevenue">—</div><div class="perf-sub" id="pRevenueBasis">Berdasarkan aktivasi bulan ini</div></div>
   <div class="card perf-kpi"><div class="label">TOP ASM BULAN INI</div><div class="num" id="pTopAsmName">—</div><div class="perf-sub" id="pTopAsmCount">— SA</div></div>
   <div class="card perf-kpi"><div class="label">TOP AE BULAN INI</div><div class="num" id="pTopAeName">—</div><div class="perf-sub" id="pTopAeCount">— SA</div></div>
  </section>
- <section class="card panel" style="margin-bottom:16px">
-   <h3>Standar Pencapaian AE</h3>
-   <div class="perf-sub" style="font-size:13px;line-height:1.7">Target setiap AE adalah <b style="color:#e7bd62">15 SA per bulan</b>. Pemantauan difokuskan pada jumlah SA, persentase pencapaian, dan sisa SA menuju target. Revenue tidak digunakan sebagai indikator penilaian performa.</div>
-  </section>
  <section class="card tablecard" style="margin-bottom:16px">
   <div class="tablehead"><div><h3>Perbandingan SA per ASM</h3><div class="count" id="perfAsmCompareCount">—</div></div><div class="count">Bulan berjalan dibanding tanggal kalender yang sama bulan lalu</div></div>
   <div class="tablewrap perf-table"><table style="min-width:760px"><thead><tr><th>No</th><th>Nama ASM</th><th>SA Bulan Ini</th><th>SA Bulan Lalu</th><th>Selisih</th><th>Growth</th></tr></thead><tbody id="perfAsmCompareBody"><tr><td colspan="6" class="empty">Mengambil data…</td></tr></tbody></table></div>
@@ -849,16 +845,23 @@ function renderPerformance(){
  const prevFull=base.filter(r=>inPeriod(r,startPrev,new Date(y,m,0,23,59,59)));
  const cs=cur.length,ps=prev.length,prevMonthTotal=prevFull.length,diff=cs-ps,growth=ps?diff/ps*100:(cs?100:0);
  const daysInMonth=new Date(y,m+1,0).getDate(),elapsedDays=Math.max(1,Math.min(day,daysInMonth));
+ const prevDaysInMonth=new Date(y,m,0).getDate();
  const projected=Math.round(cs/elapsedDays*daysInMonth);
  const revenue=cur.reduce((sum,r)=>sum+(Number(r.revenue)||0),0);
  const avg=cs/elapsedDays;
+ const prevAvgEom=prevMonthTotal/prevDaysInMonth;
+ const avgDiff=avg-prevAvgEom;
+ const avgGrowth=prevAvgEom>0?(avgDiff/prevAvgEom)*100:(avg>0?100:0);
+ const remainingMonthDays=Math.max(0,daysInMonth-day);
+ const targetTotalForPositive=Math.floor(prevAvgEom*daysInMonth)+1;
+ const dailyNeeded=remainingMonthDays>0?Math.max(0,(targetTotalForPositive-cs)/remainingMonthDays):0;
  const daily={};cur.forEach(r=>{const k=r.activation.toISOString().slice(0,10);daily[k]=(daily[k]||0)+1;});
  const best=Object.entries(daily).sort((x,z)=>z[1]-x[1])[0];
  const countBy=(key)=>{const o={};cur.forEach(r=>{const n=r[key];if(n)o[n]=(o[n]||0)+1;});return Object.entries(o).sort((x,z)=>z[1]-x[1]||x[0].localeCompare(z[0],'id'));};
  const topAsm=countBy('asm')[0],topAe=countBy('ae')[0];
- $('pTotal').textContent=`${perfFmt(cs)} (${diff>0?'+':''}${perfFmt(diff)} SA)`;
- $('pMtdCompare').textContent=`vs ${perfFmt(ps)} (${startPrev.toLocaleDateString('id-ID',{month:'short'})} s/d tgl ${compareDay})`;
- $('pMtdBasis').textContent=`${growth>0?'+':''}${growth.toLocaleString('id-ID',{maximumFractionDigits:1})}% dibanding bulan lalu`;
+ $('pTotal').textContent=avg.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' SA/hari';
+ $('pMtdCompare').textContent=`vs ${prevAvgEom.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari (rata-rata EOM ${perfMonthLabel(startPrev)})`;
+ $('pMtdBasis').textContent=`${avgDiff>0?'+':''}${avgDiff.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari • ${avgGrowth>0?'+':''}${avgGrowth.toLocaleString('id-ID',{maximumFractionDigits:1})}% vs EOM bulan lalu. ${remainingMonthDays>0?(dailyNeeded>0?`Butuh ${dailyNeeded.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari selama ${remainingMonthDays} hari tersisa agar positif.`:'Sudah positif terhadap rata-rata EOM bulan lalu.'):(avgDiff>0?'Hasil akhir bulan positif.': 'Bulan berakhir; rata-rata belum positif.')}`;
  $('pRunrate').textContent=perfFmt(projected);
  $('pRunrateCompare').textContent=`vs ${perfFmt(prevMonthTotal)} (bulan lalu EOM)`;
  const targetByCommit=prevMonthTotal*commitDay/daysInMonth;
@@ -872,7 +875,7 @@ function renderPerformance(){
  $('pRevenueBasis').textContent=`${cur.length} aktivasi bulan ini`;
  $('pTopAsmName').textContent=topAsm?topAsm[0]:'—';$('pTopAsmCount').textContent=topAsm?`${perfFmt(topAsm[1])} SA`:'0 SA';
  $('pTopAeName').textContent=topAe?topAe[0]:'—';$('pTopAeCount').textContent=topAe?`${perfFmt(topAe[1])} SA`:'0 SA';
- $('pTotal').className='num '+(diff>0?'positive':diff<0?'negative':'neutral');
+ $('pTotal').className='num '+(avgDiff>0?'positive':avgDiff<0?'negative':'neutral');
  // Ringkasan per ASM tetap tersedia, tanpa ranking.
  const asmGroups={};
  perfRows.forEach(r=>{if(!r.asm)return;asmGroups[r.asm]??={name:r.asm,cur:0,prev:0};if(inPeriod(r,startNow,endNow))asmGroups[r.asm].cur++;if(inPeriod(r,startPrev,endPrev))asmGroups[r.asm].prev++;});
