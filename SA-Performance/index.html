@@ -728,7 +728,19 @@ function exportPerformanceWA(){
  // Laporan WA hanya memuat AE yang benar-benar memiliki SA pada bulan berjalan.
  // AE tanpa transaksi SA pada bulan ini tidak dimasukkan ke daftar maupun target total.
  current.forEach(r=>{if(!r.ae)return;const key=(r.asm||'ASM belum tersedia')+'||'+r.ae;groups[key]??={asm:r.asm||'—',ae:r.ae,count:0};groups[key].count++;});
- const list=Object.values(groups).sort((a,b)=>b.count-a.count||a.ae.localeCompare(b.ae,'id'));
+ const lastActivationByAe={};
+ base.forEach(r=>{
+  if(!r.ae)return;
+  const key=(r.asm||'ASM belum tersedia')+'||'+r.ae;
+  if(!lastActivationByAe[key]||r.activation>lastActivationByAe[key])lastActivationByAe[key]=r.activation;
+ });
+ const list=Object.entries(groups).map(([key,g])=>({...g,last:lastActivationByAe[key]||null}))
+  .sort((a,b)=>b.count-a.count||a.ae.localeCompare(b.ae,'id'));
+ const zonkDays=d=>{
+  if(!d)return null;
+  const today=new Date(y,m,day),last=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  return Math.max(0,Math.floor((today-last)/86400000));
+ };
  const target=list.length*15,total=current.length,gap=Math.max(0,target-total);
  const elapsed=Math.max(1,day),days=new Date(y,m+1,0).getDate(),runrate=Math.round(total/elapsed*days);
  const f=n=>Number(n||0).toLocaleString('id-ID');
@@ -748,7 +760,12 @@ function exportPerformanceWA(){
  '',
  '🎯 *PENCAPAIAN SETIAP AE (TARGET 15 SA)*'
  ];
- if(list.length)list.forEach((r,i)=>lines.push((i+1)+'. *'+r.ae+'* — '+f(r.count)+'/15 SA ('+(r.count/15*100).toLocaleString('id-ID',{maximumFractionDigits:1})+'%) | '+(r.count>=15?'✅ Target tercapai':'Sisa '+f(15-r.count)+' SA')+(asm?'':' | '+r.asm)));
+ if(list.length)list.forEach((r,i)=>{
+  const z=zonkDays(r.last);
+  const lastLabel=r.last?fmtDate(r.last):'—';
+  const zonkLabel=z===null?'—':z===0?'0 hari (SA hari ini)':z+' hari';
+  lines.push((i+1)+'. *'+r.ae+'* — '+f(r.count)+'/15 SA ('+(r.count/15*100).toLocaleString('id-ID',{maximumFractionDigits:1})+'%) | '+(r.count>=15?'✅ Target tercapai':'Sisa '+f(15-r.count)+' SA')+' | SA terakhir: '+lastLabel+' | ⏳ ZONK: *'+zonkLabel+'*'+(asm?'':' | '+r.asm));
+ });
  else lines.push('_Belum ada AE yang teridentifikasi pada data._');
  lines.push('','📌 _Penilaian berdasarkan jumlah SA. Revenue tidak menjadi indikator target._','⏱️ Dibuat: '+new Date().toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}));
  const message=lines.join('\n');
