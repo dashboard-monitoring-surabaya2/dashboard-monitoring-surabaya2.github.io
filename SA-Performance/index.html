@@ -871,7 +871,8 @@ function renderPerformance(){
  const prevAvgEom=prevMonthTotal/prevDaysInMonth;
  const avgDiff=avg-prevAvgEom;
  const avgGrowth=prevAvgEom>0?(avgDiff/prevAvgEom)*100:(avg>0?100:0);
- const remainingMonthDays=Math.max(0,daysInMonth-day);
+ // Data SA terakhir tersedia sampai kemarin; hari ini tetap dihitung sebagai hari kejar.
+ const remainingMonthDays=Math.max(0,daysInMonth-day+1);
  const targetTotalForPositive=Math.floor(prevAvgEom*daysInMonth)+1;
  const dailyNeeded=remainingMonthDays>0?Math.max(0,(targetTotalForPositive-cs)/remainingMonthDays):0;
  const daily={};cur.forEach(r=>{const k=r.activation.toISOString().slice(0,10);daily[k]=(daily[k]||0)+1;});
@@ -891,7 +892,7 @@ function renderPerformance(){
  const chaseDays=remainingMonthDays;
  // Tambah 1 SA agar hasil akhirnya benar-benar lebih tinggi (positif), bukan sekadar sama.
  const dailyChase=chaseDays>0&&saGap>0?(saGap+1)/chaseDays:0;
- const chaseRange=chaseDays>0?`${day+1}–${daysInMonth} ${now.toLocaleDateString('id-ID',{month:'short'})}`:'';
+ const chaseRange=chaseDays>0?`${day}–${daysInMonth} ${now.toLocaleDateString('id-ID',{month:'short'})}`:'';
  const chaseText=saGap>0?(chaseDays>0?`Tertinggal ${perfFmt(saGap)} SA dari total kumulatif bulan lalu sampai ${compareDay} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}. Kejar ${Math.ceil(dailyChase).toLocaleString('id-ID')} SA/hari selama ${chaseDays} hari (${chaseRange}) agar total SA bulan ini lebih tinggi.`:`Tertinggal ${perfFmt(saGap)} SA dari total kumulatif bulan lalu sampai tanggal acuan; tidak ada sisa hari di bulan ini untuk mengejar.`):(saGap<0?`Unggul ${perfFmt(Math.abs(saGap))} SA dari total kumulatif bulan lalu sampai tanggal acuan.`:'Total SA sama dengan bulan lalu sampai tanggal acuan.');
  $('pMtdBasis').textContent=chaseText;
  $('pRunrate').textContent=perfFmt(projected);
