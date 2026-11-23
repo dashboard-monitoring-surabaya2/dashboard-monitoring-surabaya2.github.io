@@ -806,14 +806,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeWhatsAppPreview
 function renderPerformance(){
  const now=new Date(),y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
  const dateInput=$('perfCompareDate');
- const prevFirst=new Date(y,m-1,1),prevLast=new Date(y,m,0);
+ const prevFirst=new Date(y,m-1,1);
+ // Hitung batas kalender bulan lalu secara eksplisit agar tanggal 31 tidak terpotong
+ // oleh parsing tanggal atau perbedaan zona waktu pada browser mobile.
+ const prevMonthNumber=m; // bulan kalender bulan lalu dalam format 1-12
+ const prevMonthLastDay=new Date(y,m,0).getDate();
+ const prevLast=new Date(y,m-1,prevMonthLastDay,12,0,0);
  const toLocalISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
- const defaultCompare=new Date(y,m-1,Math.min(day,prevLast.getDate()));
+ const prevFirstISO=`${y}-${String(prevMonthNumber).padStart(2,'0')}-01`;
+ const prevLastISO=`${y}-${String(prevMonthNumber).padStart(2,'0')}-${String(prevMonthLastDay).padStart(2,'0')}`;
+ const defaultCompare=new Date(y,m-1,Math.min(day,prevMonthLastDay),12,0,0);
  if(dateInput){
-  dateInput.min=toLocalISO(prevFirst);dateInput.max=toLocalISO(prevLast);
+  dateInput.min=prevFirstISO;
+  dateInput.max=prevLastISO;
+  dateInput.setAttribute('min',prevFirstISO);
+  dateInput.setAttribute('max',prevLastISO);
   if(!dateInput.value)dateInput.value=toLocalISO(defaultCompare);
-  let chosen=new Date(dateInput.value+'T12:00:00');
-  if(Number.isNaN(chosen.getTime())||chosen<prevFirst||chosen>prevLast){dateInput.value=toLocalISO(defaultCompare);chosen=defaultCompare;}
+  const chosenISO=dateInput.value;
+  let chosen=new Date(chosenISO+'T12:00:00');
+  if(Number.isNaN(chosen.getTime())||chosenISO<prevFirstISO||chosenISO>prevLastISO){dateInput.value=toLocalISO(defaultCompare);chosen=defaultCompare;}
  }
  const selectedDate=dateInput&&dateInput.value?new Date(dateInput.value+'T12:00:00'):defaultCompare;
  const compareDay=selectedDate.getDate();
