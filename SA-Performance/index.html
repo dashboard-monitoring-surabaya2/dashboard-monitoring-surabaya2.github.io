@@ -372,8 +372,8 @@ tbody tr:hover{background:#202b36!important}
 <button class="navtab" id="tabUnpaid" type="button" role="tab" aria-selected="false" onclick="window.showDashboardPane('unpaid')">SA Unpaid</button>
 
 </div>
-<div id="unpaidPane" class="pane-hidden" style="display:none">
 <a href="https://dashboard-monitoring-surabaya2.github.io/" class="portal-back-btn">← KEMBALI KE PORTAL UTAMA</a>
+<div id="unpaidPane" class="pane-hidden" style="display:none">
 <div class="page-title"><span class="title-mark">▮</span><div><h2>Monitoring SA <b>Surabaya 2</b></h2><small>Customer Aging Control · Live operational dashboard</small></div><div class="page-date" id="liveDateTime">Memuat tanggal dan jam WIB…</div></div>
 <div class="weather-live" id="sidoarjoWeather" aria-live="polite">
   <div class="weather-place"><span class="weather-pin">●</span><div><b>CUACA <select id="weatherCity" aria-label="Pilih kota cuaca"><option value="sidoarjo">SIDOARJO</option><option value="surabaya">SURABAYA</option></select></b><small id="weatherUpdated">Mengambil data cuaca live…</small></div></div>
@@ -408,7 +408,6 @@ tbody tr:hover{background:#202b36!important}
 </div>
 </div>
 <div id="performancePane" style="display:block">
-<a href="https://dashboard-monitoring-surabaya2.github.io/" style="display:inline-block;background:#8b1e2b;color:#ffdc8a;padding:12px 16px;border-radius:10px;text-decoration:none;font-weight:bold;margin:12px 0">← KEMBALI KE PORTAL UTAMA</a>
 <div class="page-title"><span class="title-mark">▮</span><div><h2>Performa SA <b>Surabaya 2</b></h2><small>Monitoring pencapaian aktivasi sales</small></div><div class="page-date" id="liveDateTimePerf">Memuat tanggal dan jam WIB…</div></div>
  <div class="weather-live" id="sidoarjoWeatherPerf" aria-live="polite">
   <div class="weather-place"><span class="weather-pin">●</span><div><b>CUACA <select id="weatherCityPerf" aria-label="Pilih kota cuaca"><option value="sidoarjo">SIDOARJO</option><option value="surabaya">SURABAYA</option></select></b><small id="weatherUpdatedPerf">Mengambil data cuaca live…</small></div></div>
@@ -424,9 +423,9 @@ tbody tr:hover{background:#202b36!important}
   <div class="field"><label>PAKET / PLAN</label><select id="perfPlan"><option value="">Semua Paket</option></select></div>
  </section>
  <section class="perf-kpis">
-  <div class="card perf-kpi"><div class="label">AVG SA/HARI INI vs AVG SA/HARI BULAN LALU (EOM)</div><div class="num" id="pTotal">—</div><div class="perf-sub" id="pMtdCompare">Rata-rata SA harian bulan lalu EOM</div><div class="perf-sub" id="pMtdBasis"></div><div class="perf-date-pick"><label for="perfCompareDate">TANGGAL ACUAN VERSUS</label><input id="perfCompareDate" type="date" aria-label="Pilih tanggal acuan perbandingan"><small id="perfCompareHint">Pilih tanggal acuan bulan lalu</small></div></div>
+  <div class="card perf-kpi"><div class="label">TOTAL SA BULAN INI vs BULAN LALU</div><div class="num" id="pTotal">—</div><div class="perf-sub" id="pMtdCompare">Rata-rata SA harian bulan lalu EOM</div><div class="perf-sub" id="pMtdBasis"></div><div class="perf-date-pick"><label for="perfCompareDate">TANGGAL ACUAN VERSUS</label><input id="perfCompareDate" type="date" aria-label="Pilih tanggal acuan perbandingan"><small id="perfCompareHint">Pilih tanggal acuan bulan lalu</small></div></div>
   <div class="card perf-kpi"><div class="label">RUNRATE EOM vs BULAN LALU</div><div class="num" id="pRunrate">—</div><div class="perf-sub" id="pRunrateCompare">Proyeksi akhir bulan</div><div class="perf-sub" id="pRunrateBasis"></div><div class="perf-date-pick"><label for="perfCommitDate">TANGGAL KOMITMEN RUNRATE</label><input id="perfCommitDate" type="date" aria-label="Pilih tanggal komitmen runrate"><small id="perfCommitHint">Target SA harian untuk mengejar runrate bulan lalu</small></div></div>
-  <div class="card perf-kpi"><div class="label">RATA-RATA SA / HARI</div><div class="num" id="pAverage">—</div><div class="perf-sub" id="pBestDay">Hari tertinggi: —</div></div>
+  <div class="card perf-kpi"><div class="label">RATA-RATA SA / HARI</div><div class="num" id="pAverage">—</div><div class="perf-sub" id="pAverageCompare">vs AVG SA/HARI EOM bulan lalu: —</div><div class="perf-sub" id="pBestDay">Hari tertinggi: —</div></div>
   <div class="card perf-kpi"><div class="label">EST. REVENUE BEFORE TAX</div><div class="num" id="pRevenue">—</div><div class="perf-sub" id="pRevenueBasis">Berdasarkan aktivasi bulan ini</div></div>
   <div class="card perf-kpi"><div class="label">TOP ASM BULAN INI</div><div class="num" id="pTopAsmName">—</div><div class="perf-sub" id="pTopAsmCount">— SA</div></div>
   <div class="card perf-kpi"><div class="label">TOP AE BULAN INI</div><div class="num" id="pTopAeName">—</div><div class="perf-sub" id="pTopAeCount">— SA</div></div>
@@ -848,6 +847,9 @@ function renderPerformance(){
  const prevDaysInMonth=new Date(y,m,0).getDate();
  const projected=Math.round(cs/elapsedDays*daysInMonth);
  const revenue=cur.reduce((sum,r)=>sum+(Number(r.revenue)||0),0);
+ const prevRevenue=prev.reduce((sum,r)=>sum+(Number(r.revenue)||0),0);
+ const revenueDiff=revenue-prevRevenue;
+ const revenueGrowth=prevRevenue>0?(revenueDiff/prevRevenue)*100:(revenue>0?100:0);
  const avg=cs/elapsedDays;
  const prevAvgEom=prevMonthTotal/prevDaysInMonth;
  const avgDiff=avg-prevAvgEom;
@@ -859,9 +861,14 @@ function renderPerformance(){
  const best=Object.entries(daily).sort((x,z)=>z[1]-x[1])[0];
  const countBy=(key)=>{const o={};cur.forEach(r=>{const n=r[key];if(n)o[n]=(o[n]||0)+1;});return Object.entries(o).sort((x,z)=>z[1]-x[1]||x[0].localeCompare(z[0],'id'));};
  const topAsm=countBy('asm')[0],topAe=countBy('ae')[0];
- $('pTotal').textContent=avg.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' SA/hari';
- $('pMtdCompare').textContent=`vs ${prevAvgEom.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari (rata-rata EOM ${perfMonthLabel(startPrev)})`;
- $('pMtdBasis').textContent=`${avgDiff>0?'+':''}${avgDiff.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari • ${avgGrowth>0?'+':''}${avgGrowth.toLocaleString('id-ID',{maximumFractionDigits:1})}% vs EOM bulan lalu. ${remainingMonthDays>0?(dailyNeeded>0?`Butuh ${dailyNeeded.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari selama ${remainingMonthDays} hari tersisa agar positif.`:'Sudah positif terhadap rata-rata EOM bulan lalu.'):(avgDiff>0?'Hasil akhir bulan positif.': 'Bulan berakhir; rata-rata belum positif.')}`;
+ $('pTotal').textContent=perfFmt(cs)+' SA';
+ $('pMtdCompare').textContent=`vs ${perfFmt(ps)} SA (bulan lalu s.d. tanggal ${compareDay} ${startPrev.toLocaleDateString('id-ID',{month:'long'})})`;
+ const saGap=ps-cs;
+ const chaseDays=Math.max(0,compareDay-day);
+ const dailyChase=chaseDays>0&&saGap>0?saGap/chaseDays:0;
+ const chaseRange=chaseDays>0?`${day+1}–${compareDay} ${now.toLocaleDateString('id-ID',{month:'short'})}`:'';
+ const chaseText=saGap>0?(chaseDays>0?`Tertinggal ${perfFmt(saGap)} SA dari bulan lalu pada tanggal acuan. Kejar ${dailyChase.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari selama ${chaseDays} hari (${chaseRange}) agar menyamai pencapaian.`:`Tertinggal ${perfFmt(saGap)} SA; tanggal acuan sudah tercapai, belum ada sisa hari untuk mengejar.`):(saGap<0?`Unggul ${perfFmt(Math.abs(saGap))} SA dari bulan lalu pada tanggal acuan.`:'Pencapaian SA sama dengan bulan lalu pada tanggal acuan.');
+ $('pMtdBasis').textContent=`${diff>0?'+':''}${perfFmt(diff)} SA • ${growth>0?'+':''}${growth.toLocaleString('id-ID',{maximumFractionDigits:1})}% dibanding bulan lalu pada tanggal yang dipilih. ${chaseText}`;
  $('pRunrate').textContent=perfFmt(projected);
  $('pRunrateCompare').textContent=`vs ${perfFmt(prevMonthTotal)} (bulan lalu EOM)`;
  const targetByCommit=prevMonthTotal*commitDay/daysInMonth;
@@ -870,9 +877,11 @@ function renderPerformance(){
  $('pRunrateBasis').textContent=`Target kejar: ${dailyCommit.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari`;
  $('perfCommitHint').textContent=`Target MTD tgl ${commitDay}: ${perfFmt(Math.ceil(targetByCommit))} SA • ${remainingDays} hari dihitung`;
  $('pAverage').textContent=avg.toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1});
+ const avgVsEomDiff=avg-prevAvgEom;
+ $('pAverageCompare').textContent=`vs ${prevAvgEom.toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})} AVG SA/hari EOM bulan lalu • ${avgVsEomDiff>0?'+':''}${avgVsEomDiff.toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})} SA/hari`;
  $('pBestDay').textContent=best?`Tertinggi: ${new Date(best[0]+'T12:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'})} (${best[1]} SA)`:'Belum ada aktivasi';
  $('pRevenue').textContent='Rp '+Math.round(revenue).toLocaleString('id-ID');
- $('pRevenueBasis').textContent=`${cur.length} aktivasi bulan ini`;
+ $('pRevenueBasis').textContent=`${cur.length} aktivasi bulan ini • vs Rp ${Math.round(prevRevenue).toLocaleString('id-ID')} bulan lalu (s.d. tgl ${compareDay}) • ${revenueDiff>0?'+':''}Rp ${Math.round(revenueDiff).toLocaleString('id-ID')} (${revenueGrowth>0?'+':''}${revenueGrowth.toLocaleString('id-ID',{maximumFractionDigits:1})}%)`;
  $('pTopAsmName').textContent=topAsm?topAsm[0]:'—';$('pTopAsmCount').textContent=topAsm?`${perfFmt(topAsm[1])} SA`:'0 SA';
  $('pTopAeName').textContent=topAe?topAe[0]:'—';$('pTopAeCount').textContent=topAe?`${perfFmt(topAe[1])} SA`:'0 SA';
  $('pTotal').className='num '+(avgDiff>0?'positive':avgDiff<0?'negative':'neutral');
