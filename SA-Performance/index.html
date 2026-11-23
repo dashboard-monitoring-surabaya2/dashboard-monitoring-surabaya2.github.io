@@ -197,7 +197,7 @@ th{background:linear-gradient(180deg,#c91d28,#850e18)!important;color:#fff!impor
 .perf-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:11px!important}.perf-layout{grid-template-columns:1.2fr .8fr!important;gap:12px!important}#performancePane .perf-head{background:#151a20!important;border:1px solid #3a424c!important;border-left:4px solid #c51b27!important;border-radius:12px!important}#performancePane .perf-kpi .num.positive{color:#35d28a!important}#performancePane .perf-kpi .num.negative{color:#ff626d!important}
 button,.btn{border-radius:8px!important}
 @media(max-width:1050px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.wrap{margin-left:200px!important}.navtabs{width:190px!important}}
-@media(max-width:760px){.hero-banner{height:112px!important}.wrap{margin:0!important;padding:12px!important}.navtabs{position:sticky!important;top:0!important;bottom:auto!important;width:100%!important;height:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;flex-direction:row!important;padding:8px!important;border-right:0!important;border-bottom:1px solid #343a42!important}.navtab{text-align:center!important;padding:10px!important}.navtab:before{display:none!important}.grid,.perf-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.insights,.perf-layout{grid-template-columns:1fr!important}.page-title{flex-wrap:wrap}.page-date{margin-left:0}}
+@media(max-width:760px){.portal-back-btn{grid-column:1/-1!important;margin-top:2px!important}.hero-banner{height:112px!important}.wrap{margin:0!important;padding:12px!important}.navtabs{position:sticky!important;top:0!important;bottom:auto!important;width:100%!important;height:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;flex-direction:row!important;padding:8px!important;border-right:0!important;border-bottom:1px solid #343a42!important}.navtab{text-align:center!important;padding:10px!important}.navtab:before{display:none!important}.grid,.perf-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.insights,.perf-layout{grid-template-columns:1fr!important}.page-title{flex-wrap:wrap}.page-date{margin-left:0}}
 
 
 .weather-live{display:flex;align-items:center;gap:clamp(12px,2vw,24px);flex-wrap:wrap;margin:10px 0 15px;padding:11px 15px;background:linear-gradient(110deg,#15191f,#20252c 65%,#171b20);border:1px solid #414955;border-left:3px solid #c51f2b;border-radius:11px;box-shadow:0 6px 18px #0005;color:#f4f5f6}
@@ -359,7 +359,7 @@ tbody tr:hover{background:#202b36!important}
 @media(max-width:560px){.wa-preview-modal{padding:8px}.wa-preview-head,.wa-preview-content,.wa-preview-foot{padding:13px}.wa-preview-content pre{font-size:12px}}
 
 
-.portal-back-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#8b1e2b,#5f121c);color:#ffdc8a!important;padding:11px 16px;border:1px solid #c44b54;border-radius:9px;text-decoration:none;font-size:12px;font-weight:850;letter-spacing:.2px;margin:0 0 12px;box-shadow:0 5px 14px #0005;transition:transform .18s,filter .18s}
+.portal-back-btn{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;min-height:48px;box-sizing:border-box;background:linear-gradient(135deg,#8b1e2b,#5f121c);color:#ffdc8a!important;padding:12px 13px;border:1px solid #c44b54;border-radius:10px;text-decoration:none;font-size:12px;font-weight:850;letter-spacing:.2px;margin:4px 0 0;box-shadow:0 5px 14px #0005;transition:transform .18s,filter .18s}
 .portal-back-btn:hover{transform:translateY(-1px);filter:brightness(1.12)}
 
 </style>
@@ -370,9 +370,8 @@ tbody tr:hover{background:#202b36!important}
 <div class="navtabs" role="tablist" aria-label="Dashboard">
 <button class="navtab active" id="tabPerformance" type="button" role="tab" aria-selected="true" onclick="window.showDashboardPane('performance')">Performa SA</button>
 <button class="navtab" id="tabUnpaid" type="button" role="tab" aria-selected="false" onclick="window.showDashboardPane('unpaid')">SA Unpaid</button>
-
-</div>
 <a href="https://dashboard-monitoring-surabaya2.github.io/" class="portal-back-btn">← KEMBALI KE PORTAL UTAMA</a>
+</div>
 <div id="unpaidPane" class="pane-hidden" style="display:none">
 <div class="page-title"><span class="title-mark">▮</span><div><h2>Monitoring SA <b>Surabaya 2</b></h2><small>Customer Aging Control · Live operational dashboard</small></div><div class="page-date" id="liveDateTime">Memuat tanggal dan jam WIB…</div></div>
 <div class="weather-live" id="sidoarjoWeather" aria-live="polite">
