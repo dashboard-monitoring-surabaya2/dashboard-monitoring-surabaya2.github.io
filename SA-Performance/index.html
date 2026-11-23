@@ -885,20 +885,26 @@ function renderPerformance(){
  const totalDiffEl=$('pTotalDiff');
  totalDiffEl.textContent=`(${saGap>0?'-':(saGap<0?'+':'±')}${perfFmt(Math.abs(saGap))} SA • ${growth>0?'+':(growth<0?'-':'±')}${Math.abs(growth).toLocaleString('id-ID',{maximumFractionDigits:1})}%)`;
  totalDiffEl.className=`perf-total-diff ${saGap>0?'negative':(saGap<0?'positive':'neutral')}`;
- // Target kejar harus memakai posisi data terakhir (sampai kemarin) sebagai titik awal,
- // lalu menambahkan SA bulan lalu dari hari setelah posisi data sampai H-1 tanggal komitmen.
- // Contoh: data terakhir tgl 22, komitmen tgl 26 => bandingkan Nov 1-22 dengan
- // Okt 1-25; SA Okt 23-25 otomatis ikut masuk ke target. Hari produksi: 23, 24, 25 (3 hari).
- const chaseDays=Math.max(0,commitDay-day);
- const prevThroughCommitEve=commitDay>1
-   ?base.filter(r=>inPeriod(r,startPrev,new Date(y,m-1,commitDay-1,23,59,59))).length
+ // Target harian pada kartu TOTAL SA mengikuti tanggal acuan versus yang dipilih.
+ // Contoh: pilih 26 Oktober => target positif pada 26 November pukul 00.01.
+ // Maka pembanding target adalah kumulatif Oktober sampai H-1 (25 Oktober),
+ // sedangkan hari produksi yang tersedia adalah 23, 24, dan 25 November.
+ // Jika memilih 30 atau 31 Oktober, keduanya diarahkan ke EOM bulan berjalan
+ // (30 November pukul 00.01), dengan pembanding Oktober sampai 29 Oktober.
+ const chaseCommitDay=Math.min(compareDay,daysInMonth);
+ const chaseDays=Math.max(0,chaseCommitDay-day);
+ const prevThroughCommitEve=chaseCommitDay>1
+   ?base.filter(r=>inPeriod(r,startPrev,new Date(y,m-1,Math.min(chaseCommitDay-1,prevMonthLastDay),23,59,59))).length
    :0;
  const chaseGap=prevThroughCommitEve-cs;
- // Tambah 1 SA agar pada pukul 00.01 tanggal komitmen posisi bulan ini sudah positif.
- const dailyChase=chaseDays>0&&chaseGap>=0?(chaseGap+1)/chaseDays:0;
- const chaseEndDay=Math.max(day,commitDay-1);
+ // Tambah 1 SA agar posisi bulan ini sudah lebih tinggi pada pukul 00.01 tanggal target.
+ const dailyChase=chaseDays>0?Math.max(0,(chaseGap+1)/chaseDays):0;
+ const chaseEndDay=Math.max(day,chaseCommitDay-1);
  const chaseRange=chaseDays>0?`${day}–${chaseEndDay} ${now.toLocaleDateString('id-ID',{month:'short'})}`:'';
- const chaseText=chaseGap>0?(chaseDays>0?`Untuk sudah positif pada ${commitDay} ${now.toLocaleDateString('id-ID',{month:'short'})} pukul 00.01, bandingkan SA bulan ini sampai ${day-1} ${now.toLocaleDateString('id-ID',{month:'long'})} dengan total kumulatif bulan lalu sampai ${commitDay-1} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}. Selisih ini sudah termasuk SA bulan lalu setelah tanggal data terakhir hingga H-1 komitmen. Kejar minimal ${Math.ceil(dailyChase).toLocaleString('id-ID')} SA/hari selama ${chaseDays} hari (${chaseRange}) agar posisi bulan ini lebih tinggi.`:`Masih tertinggal ${perfFmt(chaseGap)} SA untuk mencapai posisi positif pada tanggal komitmen; tidak ada hari produksi tersisa sebelum pukul 00.01.`):(chaseGap<0?`Sudah unggul ${perfFmt(Math.abs(chaseGap))} SA terhadap total kumulatif bulan lalu sampai ${commitDay-1} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}; target positif tercapai.`:'Posisi SA sama dengan pembanding; tambahkan minimal 1 SA sebelum tanggal komitmen agar positif.');
+ const chaseText=chaseGap>=0?(chaseDays>0
+   ?`Target positif: ${chaseCommitDay} ${now.toLocaleDateString('id-ID',{month:'short'})} pukul 00.01. Dibandingkan dengan total SA bulan lalu sampai ${chaseCommitDay-1} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}; posisi bulan ini dihitung sampai ${day-1} ${now.toLocaleDateString('id-ID',{month:'long'})}. Kejar minimal ${Math.ceil(dailyChase).toLocaleString('id-ID')} SA/hari selama ${chaseDays} hari (${chaseRange}) agar sudah lebih tinggi sebelum tanggal target.`
+   :`Target ${chaseCommitDay} ${now.toLocaleDateString('id-ID',{month:'short'})} pukul 00.01. Tidak ada hari produksi tersisa untuk mengejar; posisi saat ini masih tertinggal ${perfFmt(chaseGap)} SA dari pembanding.`)
+   :`Posisi bulan ini sudah lebih tinggi ${perfFmt(Math.abs(chaseGap))} SA dari total bulan lalu sampai ${chaseCommitDay-1} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}; target positif tercapai.`;
  $('pMtdBasis').textContent=chaseText;
  $('pRunrate').textContent=perfFmt(projected);
  $('pRunrateCompare').textContent=`vs ${perfFmt(prevMonthTotal)} (bulan lalu EOM)`;
