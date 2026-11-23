@@ -876,14 +876,14 @@ function renderPerformance(){
  const chaseDays=Math.max(0,compareDay-day);
  const dailyChase=chaseDays>0&&saGap>0?saGap/chaseDays:0;
  const chaseRange=chaseDays>0?`${day+1}–${compareDay} ${now.toLocaleDateString('id-ID',{month:'short'})}`:'';
- const chaseText=saGap>0?(chaseDays>0?`Tertinggal ${perfFmt(saGap)} SA dari bulan lalu pada tanggal acuan. Kejar ${dailyChase.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari selama ${chaseDays} hari (${chaseRange}) agar menyamai pencapaian.`:`Tertinggal ${perfFmt(saGap)} SA; tanggal acuan sudah tercapai, belum ada sisa hari untuk mengejar.`):(saGap<0?`Unggul ${perfFmt(Math.abs(saGap))} SA dari bulan lalu pada tanggal acuan.`:'Pencapaian SA sama dengan bulan lalu pada tanggal acuan.');
+ const chaseText=saGap>0?(chaseDays>0?`Tertinggal ${perfFmt(saGap)} SA dari bulan lalu pada tanggal acuan. Kejar ${Math.ceil(dailyChase).toLocaleString('id-ID')} SA/hari selama ${chaseDays} hari (${chaseRange}) agar menyamai pencapaian.`:`Tertinggal ${perfFmt(saGap)} SA; tanggal acuan sudah tercapai, belum ada sisa hari untuk mengejar.`):(saGap<0?`Unggul ${perfFmt(Math.abs(saGap))} SA dari bulan lalu pada tanggal acuan.`:'Pencapaian SA sama dengan bulan lalu pada tanggal acuan.');
  $('pMtdBasis').textContent=chaseText;
  $('pRunrate').textContent=perfFmt(projected);
  $('pRunrateCompare').textContent=`vs ${perfFmt(prevMonthTotal)} (bulan lalu EOM)`;
  const targetByCommit=prevMonthTotal*commitDay/daysInMonth;
  const remainingDays=Math.max(1,commitDay-day+1);
  const dailyCommit=Math.max(0,(targetByCommit-cs)/remainingDays);
- $('pRunrateBasis').textContent=`Target kejar: ${dailyCommit.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})} SA/hari`;
+ $('pRunrateBasis').textContent=`Target kejar: ${Math.ceil(dailyCommit).toLocaleString('id-ID')} SA/hari`;
  $('perfCommitHint').textContent=`Target MTD tgl ${commitDay}: ${perfFmt(Math.ceil(targetByCommit))} SA • ${remainingDays} hari dihitung`;
  $('pAverage').textContent=avg.toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1});
  const avgVsEomDiff=avg-prevAvgEom;
