@@ -440,8 +440,8 @@ tbody tr:hover{background:#202b36!important}
   <div class="tablewrap perf-table"><table style="min-width:760px"><thead><tr><th>No</th><th>Nama ASM</th><th>SA Bulan Ini</th><th>SA Bulan Lalu</th><th>Selisih</th><th>Growth</th></tr></thead><tbody id="perfAsmCompareBody"><tr><td colspan="6" class="empty">Mengambil data…</td></tr></tbody></table></div>
  </section>
  <section class="card tablecard" style="margin-bottom:16px">
-  <div class="tablehead"><div><h3>Pencapaian Target SA per AE</h3><div class="count" id="perfCompareCount">—</div></div><div class="field perf-compare-filter"><label for="perfCompareAsm">FILTER NAMA ASM</label><select id="perfCompareAsm"><option value="">Semua ASM</option></select></div></div>
-  <div class="tablewrap perf-table"><table style="min-width:760px"><thead><tr><th>No</th><th>Nama ASM</th><th>Nama AE</th><th>SA Bulan Ini</th><th>SA Bulan Lalu</th><th>Selisih</th><th>Growth</th></tr></thead><tbody id="perfCompareBody"><tr><td colspan="7" class="empty">Mengambil data…</td></tr></tbody></table></div>
+  <div class="tablehead"><div><h3>Pencapaian Target SA per AE</h3><div class="count" id="perfCompareCount">—</div></div><div class="count">Mengikuti filter Nama ASM, AE, dan Plan di atas</div></div>
+  <div class="tablewrap perf-table"><table style="min-width:1050px"><thead><tr><th>No</th><th>Nama ASM</th><th>Nama AE</th><th>SA Bulan Ini</th><th>Target SA</th><th>Pencapaian</th><th>Sisa Target</th><th>SA Terakhir</th><th>Lama Hari ZONK</th><th>Status Target</th></tr></thead><tbody id="perfCompareBody"><tr><td colspan="10" class="empty">Mengambil data…</td></tr></tbody></table></div>
  </section>
  <section class="card tablecard">
   <div class="tablehead"><div><h3>Detail Aktivasi Bulan Berjalan</h3><div class="count" id="perfDetailCount">—</div></div><div class="count">Service Status hanya informasi, bukan filter penjualan</div></div>
@@ -684,7 +684,7 @@ function perfGet(o,names){for(const name of names){const k=Object.keys(o).find(x
 window.loadPerformance=function(){
  if(perfLoading)return;perfLoading=true;
  $('perfError').style.display='none';
- $('perfDetailBody').innerHTML='<tr><td colspan="11" class="empty">Mengambil data dari sheet data Update…</td></tr>';
+ $('perfDetailBody').innerHTML='<tr><td colspan="9" class="empty">Mengambil data dari sheet data Update…</td></tr>';
  const old=document.getElementById('perf-gviz-script');if(old)old.remove();
  let done=false;const timeout=setTimeout(()=>{if(done)return;done=true;perfLoading=false;$('perfError').style.display='block';$('perfError').textContent='Data sheet data Update belum merespons setelah 20 detik. Periksa akses Viewer, GID 0, dan coba buka link Google Sheets di browser.'},20000);
  window.handlePerformanceSheetResponse=function(resp){
@@ -863,16 +863,37 @@ function renderPerformance(){
  $('perfAsmCompareCount').textContent=asmData.length+' ASM';
  $('perfAsmCompareBody').innerHTML=asmData.length?asmData.map((g,i)=>{const d=g.cur-g.prev,p=g.prev?d/g.prev*100:(g.cur?100:0);return `<tr><td>${i+1}</td><td><b>${esc(g.name)}</b></td><td>${perfFmt(g.cur)}</td><td>${perfFmt(g.prev)}</td><td class="${d>0?'growth-up':d<0?'growth-down':''}">${d>0?'+':''}${perfFmt(d)}</td><td class="${p>0?'growth-up':p<0?'growth-down':''}">${p>0?'+':''}${p.toLocaleString('id-ID',{maximumFractionDigits:1})}%</td></tr>`}).join(''):'<tr><td colspan="6" class="empty">Tidak ada data ASM untuk periode ini.</td></tr>';
 
- // Pencapaian target AE; filter ASM tabel ini terpisah.
- const compareAsms=[...new Set(perfRows.map(r=>r.asm).filter(Boolean))].sort(),oldCompare=$('perfCompareAsm').value;
- $('perfCompareAsm').innerHTML='<option value="">Semua ASM</option>'+compareAsms.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
- $('perfCompareAsm').value=compareAsms.includes(oldCompare)?oldCompare:'';
- const selected=$('perfCompareAsm').value,compareGroups={};
- perfRows.filter(r=>!selected||r.asm===selected).forEach(r=>{if(!r.ae)return;const key=(r.asm||'ASM tidak tersedia')+'||'+r.ae;compareGroups[key]??={asm:r.asm||'—',ae:r.ae,count:0};});
- perfRows.filter(r=>(!selected||r.asm===selected)&&inPeriod(r,startNow,endNow)).forEach(r=>{if(!r.ae)return;const key=(r.asm||'ASM tidak tersedia')+'||'+r.ae;compareGroups[key]??={asm:r.asm||'—',ae:r.ae,count:0};compareGroups[key].count++;});
- const aeData=Object.values(compareGroups).sort((x,z)=>z.count-x.count||x.ae.localeCompare(z.ae,'id'));
- $('perfCompareCount').textContent=aeData.length+' AE';
- $('perfCompareBody').innerHTML=aeData.length?aeData.map((g,i)=>{const pct=g.count/15*100,remain=Math.max(0,15-g.count),done=g.count>=15;return `<tr><td>${i+1}</td><td>${esc(g.asm)}</td><td><b>${esc(g.ae)}</b></td><td>15</td><td><b>${perfFmt(g.count)}</b></td><td>${pct.toLocaleString('id-ID',{maximumFractionDigits:1})}%</td><td>${perfFmt(remain)}</td><td><span class="pill ${done?'p1':'p2'}">${done?'Target tercapai':'Belum tercapai'}</span></td></tr>`}).join(''):'<tr><td colspan="8" class="empty">Tidak ada data AE untuk ASM/periode ini.</td></tr>';
+ // Hanya AE yang memiliki minimal 1 SA pada bulan berjalan yang ditampilkan.
+ // Data mengikuti filter utama Nama ASM, AE, dan Plan.
+ const activeGroups={};
+ cur.forEach(r=>{
+  if(!r.ae)return;
+  const key=(r.asm||'ASM tidak tersedia')+'||'+r.ae;
+  activeGroups[key]??={asm:r.asm||'—',ae:r.ae,count:0};
+  activeGroups[key].count++;
+ });
+ // Cari tanggal aktivasi terakhir setiap AE dari seluruh riwayat pada data terpilih.
+ const lastActivationByAe={};
+ base.forEach(r=>{
+  if(!r.ae)return;
+  const key=(r.asm||'ASM tidak tersedia')+'||'+r.ae;
+  if(!lastActivationByAe[key]||r.activation>lastActivationByAe[key])lastActivationByAe[key]=r.activation;
+ });
+ const aeData=Object.entries(activeGroups).map(([key,g])=>({...g,last:lastActivationByAe[key]||null}))
+  .sort((x,z)=>z.count-x.count||x.ae.localeCompare(z.ae,'id'));
+ $('perfCompareCount').textContent=aeData.length+' AE aktif bulan ini';
+ const today=new Date(y,m,day);
+ const zonkDays=d=>{
+  if(!d)return '—';
+  const a=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  const b=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  return Math.max(0,Math.floor((a-b)/86400000));
+ };
+ $('perfCompareBody').innerHTML=aeData.length?aeData.map((g,i)=>{
+  const pct=g.count/15*100,remain=Math.max(0,15-g.count),done=g.count>=15,z=zonkDays(g.last);
+  const zonkLabel=z===0?'0 hari (SA hari ini)':z+' hari';
+  return `<tr><td>${i+1}</td><td>${esc(g.asm)}</td><td><b>${esc(g.ae)}</b></td><td><b>${perfFmt(g.count)}</b></td><td>15</td><td>${pct.toLocaleString('id-ID',{maximumFractionDigits:1})}%</td><td>${perfFmt(remain)}</td><td>${fmtDate(g.last)}</td><td class="${z>0?'growth-down':'growth-up'}"><b>${zonkLabel}</b></td><td><span class="pill ${done?'p1':'p2'}">${done?'Target tercapai':'Belum tercapai'}</span></td></tr>`;
+ }).join(''):'<tr><td colspan="10" class="empty">Belum ada AE dengan SA pada bulan berjalan sesuai filter.</td></tr>';
 
  const details=cur.slice().sort((x,z)=>z.activation-x.activation);
  $('perfDetailCount').textContent=perfFmt(details.length)+' aktivasi';
@@ -881,7 +902,6 @@ function renderPerformance(){
 $('perfAsm').addEventListener('change',()=>{if(perfLoaded)renderPerformance()});
 $('perfAe').addEventListener('change',()=>{if(perfLoaded)renderPerformance()});
 $('perfPlan').addEventListener('change',()=>{if(perfLoaded)renderPerformance()});
-$('perfCompareAsm').addEventListener('change',()=>{if(perfLoaded)renderPerformance()});
 $('perfCompareDate').addEventListener('change',()=>{if(perfLoaded)renderPerformance()});
 $('perfCommitDate').addEventListener('change',()=>{if(perfLoaded)renderPerformance()});
 setInterval(()=>{if(perfLoaded && $('performancePane') && !$('performancePane').classList.contains('pane-hidden'))loadPerformance()},300000);
