@@ -885,15 +885,20 @@ function renderPerformance(){
  const totalDiffEl=$('pTotalDiff');
  totalDiffEl.textContent=`(${saGap>0?'-':(saGap<0?'+':'±')}${perfFmt(Math.abs(saGap))} SA • ${growth>0?'+':(growth<0?'-':'±')}${Math.abs(growth).toLocaleString('id-ID',{maximumFractionDigits:1})}%)`;
  totalDiffEl.className=`perf-total-diff ${saGap>0?'negative':(saGap<0?'positive':'neutral')}`;
- // Pembanding bulan lalu adalah akumulasi SA dari tanggal 1 sampai
- // tanggal acuan yang dipilih (inklusif), bukan hanya SA pada tanggal itu.
- // Target kejar dibagi berdasarkan sisa hari di bulan berjalan,
- // tanpa memetakan tanggal acuan bulan lalu ke tanggal bulan ini.
- const chaseDays=remainingMonthDays;
- // Tambah 1 SA agar hasil akhirnya benar-benar lebih tinggi (positif), bukan sekadar sama.
- const dailyChase=chaseDays>0&&saGap>0?(saGap+1)/chaseDays:0;
- const chaseRange=chaseDays>0?`${day}–${daysInMonth} ${now.toLocaleDateString('id-ID',{month:'short'})}`:'';
- const chaseText=saGap>0?(chaseDays>0?`Tertinggal ${perfFmt(saGap)} SA dari total kumulatif bulan lalu sampai ${compareDay} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}. Kejar ${Math.ceil(dailyChase).toLocaleString('id-ID')} SA/hari selama ${chaseDays} hari (${chaseRange}) agar total SA bulan ini lebih tinggi.`:`Tertinggal ${perfFmt(saGap)} SA dari total kumulatif bulan lalu sampai tanggal acuan; tidak ada sisa hari di bulan ini untuk mengejar.`):(saGap<0?`Unggul ${perfFmt(Math.abs(saGap))} SA dari total kumulatif bulan lalu sampai tanggal acuan.`:'Total SA sama dengan bulan lalu sampai tanggal acuan.');
+ // Target kejar harus memakai posisi data terakhir (sampai kemarin) sebagai titik awal,
+ // lalu menambahkan SA bulan lalu dari hari setelah posisi data sampai H-1 tanggal komitmen.
+ // Contoh: data terakhir tgl 22, komitmen tgl 26 => bandingkan Nov 1-22 dengan
+ // Okt 1-25; SA Okt 23-25 otomatis ikut masuk ke target. Hari produksi: 23, 24, 25 (3 hari).
+ const chaseDays=Math.max(0,commitDay-day);
+ const prevThroughCommitEve=commitDay>1
+   ?base.filter(r=>inPeriod(r,startPrev,new Date(y,m-1,commitDay-1,23,59,59))).length
+   :0;
+ const chaseGap=prevThroughCommitEve-cs;
+ // Tambah 1 SA agar pada pukul 00.01 tanggal komitmen posisi bulan ini sudah positif.
+ const dailyChase=chaseDays>0&&chaseGap>=0?(chaseGap+1)/chaseDays:0;
+ const chaseEndDay=Math.max(day,commitDay-1);
+ const chaseRange=chaseDays>0?`${day}–${chaseEndDay} ${now.toLocaleDateString('id-ID',{month:'short'})}`:'';
+ const chaseText=chaseGap>0?(chaseDays>0?`Untuk sudah positif pada ${commitDay} ${now.toLocaleDateString('id-ID',{month:'short'})} pukul 00.01, bandingkan SA bulan ini sampai ${day-1} ${now.toLocaleDateString('id-ID',{month:'long'})} dengan total kumulatif bulan lalu sampai ${commitDay-1} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}. Selisih ini sudah termasuk SA bulan lalu setelah tanggal data terakhir hingga H-1 komitmen. Kejar minimal ${Math.ceil(dailyChase).toLocaleString('id-ID')} SA/hari selama ${chaseDays} hari (${chaseRange}) agar posisi bulan ini lebih tinggi.`:`Masih tertinggal ${perfFmt(chaseGap)} SA untuk mencapai posisi positif pada tanggal komitmen; tidak ada hari produksi tersisa sebelum pukul 00.01.`):(chaseGap<0?`Sudah unggul ${perfFmt(Math.abs(chaseGap))} SA terhadap total kumulatif bulan lalu sampai ${commitDay-1} ${startPrev.toLocaleDateString('id-ID',{month:'long'})}; target positif tercapai.`:'Posisi SA sama dengan pembanding; tambahkan minimal 1 SA sebelum tanggal komitmen agar positif.');
  $('pMtdBasis').textContent=chaseText;
  $('pRunrate').textContent=perfFmt(projected);
  $('pRunrateCompare').textContent=`vs ${perfFmt(prevMonthTotal)} (bulan lalu EOM)`;
